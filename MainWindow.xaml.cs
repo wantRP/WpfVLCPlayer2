@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -34,6 +35,20 @@ namespace WpfApp1 {
 		public enum Isplaying { playing, stop, pause };
 		public Isplaying isplaying = Isplaying.stop;
 		public bool SliderDirectMoveMask = false;
+		bool _over;
+		public bool playover {
+			get { return _over; }
+			set {
+				_over = value;
+				if (_over) {
+					//Do stuff here.
+					Console.WriteLine("true");
+					Thread.Sleep(800);
+					//control.SourceProvider.MediaPlayer.Play(new Uri("C:/Users/duchu/Videos/BBC World News Countdown.flv"));
+					playover = false;
+				}
+			}
+		}
 		public MainWindow() {
 			InitializeComponent();
 			var currentAssembly = Assembly.GetEntryAssembly();
@@ -43,7 +58,7 @@ namespace WpfApp1 {
 			slider1.DataContext = vtime;
 			vtime.time = "ee";
 			vlcLibDirectory = new DirectoryInfo(Path.Combine(currentDirectory, "libvlc", IntPtr.Size == 4 ? "win-x86" : "win-x64"));
-
+			playover = false;
 			this.control = new VlcControl();
 			
 			this.ControlContainer.Content = this.control;
@@ -82,11 +97,6 @@ namespace WpfApp1 {
 
 			this.control.SourceProvider.CreatePlayer(this.vlcLibDirectory);
 
-			/*this.control.SourceProvider.MediaPlayer.Log += (_, args) =>
-      {
-        string message = $"libVlc : {args.Level} {args.Message} @ {args.Module}";
-        System.Diagnostics.Debug.WriteLine(message);
-      };*/
 
 			control.SourceProvider.MediaPlayer.Play(new Uri(str));
 		}
@@ -140,11 +150,11 @@ namespace WpfApp1 {
 				this.control?.Dispose();
 				this.control = new VlcControl();
 				this.ControlContainer.Content = this.control;
-				//string[] para = { "input-repeat=65535","--input-list=D:/Ipartment.2020.S05.Complete.4K.WEB-DL.H265.AAC-TJUPT/Ipartment.2020.S05E13.4K.WEB-DL.H265.AAC-TJUPT.mp4,C:/Users/duchu/Videos/1.mkv" };
+				//control.SourceProvider.MediaPlayer.EndReached += MediaPlayer_EndReached;
 				this.control.SourceProvider.CreatePlayer(this.vlcLibDirectory);
 				control.SourceProvider.MediaPlayer.Paused += new EventHandler<Vlc.DotNet.Core.VlcMediaPlayerPausedEventArgs>(pauevent);
-				//control.SourceProvider.MediaPlayer.
 				control.SourceProvider.MediaPlayer.EndReached += new EventHandler<VlcMediaPlayerEndReachedEventArgs>(currentover);
+				control.SourceProvider.MediaPlayer.Stopped += new EventHandler<VlcMediaPlayerStoppedEventArgs>(stopped);
 				control.SourceProvider.MediaPlayer.Play(new Uri("C:/Users/duchu/Videos/BBC World News Countdown.flv"));
 				timer.Start();
 				return;
@@ -164,13 +174,27 @@ namespace WpfApp1 {
 				return;
 			}
 		}
-
-		private void currentover(object sender, VlcMediaPlayerEndReachedEventArgs e) {
-			//throw new NotImplementedException();
-			Console.WriteLine("video is over");
-			playbystr("C:/Users/duchu/Videos/1.mkv");
+		void tt(){
+			Thread.Sleep(600);
+			Console.WriteLine("zzz");
+			control.SourceProvider.MediaPlayer.Play(new Uri("C:/Users/duchu/Videos/BBC World News Countdown.flv"));
+		}
+		private void stopped(object sender, VlcMediaPlayerStoppedEventArgs e) {
+			Console.WriteLine("stopped");
+			Thread thread = new Thread(tt);
+			thread.Start();
 		}
 
+		private void currentover(object sender, VlcMediaPlayerEndReachedEventArgs e) {
+			//btnPause.Content = "播放";
+			//isplaying = Isplaying.stop;
+			//throw new NotImplementedException();
+			playover = true;
+			Console.WriteLine("video is over");
+			//control.SourceProvider.MediaPlayer.Play(new Uri("C:/Users/duchu/Videos/BBC World News Countdown.flv"));
+			//this.control.SourceProvider.CreatePlayer(this.vlcLibDirectory);
+			//control.SourceProvider.MediaPlayer.Play("C:/Users/duchu/Videos/1.mkv");
+		}
 		private void slider1_DragStarted(object sender, System.Windows.Controls.Primitives.DragStartedEventArgs e) {
 			SliderDirectMoveMask = true;
 			timer.Stop();
@@ -189,12 +213,15 @@ namespace WpfApp1 {
 		private void slider1_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e) {
 
 		}
-
 		private void buttontest_Click(object sender, RoutedEventArgs e) {
-			//Console.WriteLine(GetCurrentTime().ToString());
-			//string[] para = { "input-repeat=65535", "--input-list=D:/Ipartment.2020.S05.Complete.4K.WEB-DL.H265.AAC-TJUPT/Ipartment.2020.S05E13.4K.WEB-DL.H265.AAC-TJUPT.mp4,C:/Users/duchu/Videos/1.mkv" };
-			playbystr("C:/Users/duchu/Videos/BBC World News Countdown.flv");
-			//Console.WriteLine(control.SourceProvider.MediaPlayer.IsPlaying()?"yes":"no");
+			//playbystr("C:/Users/duchu/Videos/BBC World News Countdown.flv");
+			//control.SourceProvider
+			//this.control?.Dispose();
+			//this.control = new VlcControl();
+			//this.ControlContainer.Content = this.control;
+
+			//this.control.SourceProvider.CreatePlayer(this.vlcLibDirectory);
+			control.SourceProvider.MediaPlayer.Play(new Uri("C:/Users/duchu/Videos/BBC World News Countdown.flv"));
 		}
 
 		private void slider1_MouseLeftButtonUp(object sender, MouseButtonEventArgs e) {

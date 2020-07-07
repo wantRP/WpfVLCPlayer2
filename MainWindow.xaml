@@ -288,7 +288,7 @@
 			</DockPanel>
 			<StackPanel Height="30" DockPanel.Dock="Left" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
 				<Button Click="OnStopButtonClick" Width="50" Margin="10,0" Content="Stop"/>
-				<Button x:Name="btnPause" Content="播放"  Width="50" Margin="10,0" Click="btnPause_Click"/>
+				<Button x:Name="btnPause" Content="播放"  Width="50" Margin="10,0" Click="btnPause_Click" Height="30" VerticalAlignment="Top"/>
 				<Button Grid.Row="1" Click="OnForwardButtonClick" x:Name="Forward" Margin="10,0">Forward</Button>
 				<Button x:Name="buttontest" Content="TEST" Margin="10,0" Click="buttontest_Click"/>
 				<TextBlock x:Name="tb" Text="{Binding time}"/>
