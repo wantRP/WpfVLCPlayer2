@@ -122,7 +122,8 @@ namespace WpfApp1 {
 			string msg = "Drop";
 			if (e.Data.GetDataPresent(DataFormats.FileDrop)) {
 				msg = ((System.Array)e.Data.GetData(DataFormats.FileDrop)).GetValue(0).ToString();
-				playbystr(msg);
+				//playbystr(msg);
+				control.SourceProvider.MediaPlayer.Play(new Uri(msg));
 			}
 
 		}
@@ -163,8 +164,11 @@ namespace WpfApp1 {
 		void tt(){
 			Thread.Sleep(900);
 			Console.WriteLine("zzz");
-			if(checkboxlist.IsChecked==true)
-			control.SourceProvider.MediaPlayer.Play(new Uri("C:/Users/duchu/Videos/BBC World News Countdown.flv"));
+			this.checkboxlist.Dispatcher.Invoke(new Action(delegate {
+				if (checkboxlist.IsChecked == true)
+					control.SourceProvider.MediaPlayer.Play(new Uri("C:/Users/duchu/Videos/BBC World News Countdown.flv"));
+			}));
+			
 		}
 		private void stopped(object sender, VlcMediaPlayerStoppedEventArgs e) {
 			Console.WriteLine("stopped");
@@ -182,6 +186,7 @@ namespace WpfApp1 {
 			//this.control.SourceProvider.CreatePlayer(this.vlcLibDirectory);
 			//control.SourceProvider.MediaPlayer.Play("C:/Users/duchu/Videos/1.mkv");
 		}
+		
 		private void slider1_DragStarted(object sender, System.Windows.Controls.Primitives.DragStartedEventArgs e) {
 			SliderDirectMoveMask = true;
 			timer.Stop();
