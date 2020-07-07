@@ -7,7 +7,7 @@
         xmlns:local="clr-namespace:WpfApp1"
         mc:Ignorable="d"
 				AllowDrop="True"
-        Title="MainWindow" Height="600" Width="724" SizeChanged="Window_SizeChanged" LocationChanged="Window_LocationChanged" Closed="Window_Closed">
+        Title="MainWindow" Height="600" Width="724">
 	<Window.Resources>
 		<SolidColorBrush x:Key="SliderThumb.Static.Foreground" Color="#FFE5E5E5"/>
 		<SolidColorBrush x:Key="SliderThumb.MouseOver.Background" Color="#FFDCECFC"/>
