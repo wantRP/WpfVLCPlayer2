@@ -26,6 +26,7 @@ namespace WpfApp1 {
 	public partial class MainWindow : Window {
 		private readonly DirectoryInfo vlcLibDirectory;
 		private VlcControl control;
+		Playlist listwindow;
 		public class videotime {
 			public string time { get; set; }
 			public string progress{ get; set; }
@@ -66,15 +67,26 @@ namespace WpfApp1 {
 			//this.control.SourceProvider.CreatePlayer(this.vlcLibDirectory);
 			control?.Dispose();
 			control = null;
+			
+			/*listwindow.Top = this.Top;
+			listwindow.Height = this.Height;
+			listwindow.Left = this.Width + this.Left;*/
 			Loaded += new RoutedEventHandler(Window1_Loaded);
 		}
-
+		void synclistlayout(){
+			if (listwindow == null) return;
+			listwindow.Top = this.Top;
+			listwindow.Height = this.Height;
+			listwindow.Left = this.Width + this.Left-14;
+		}
 		private void pauevent(object sender, VlcMediaPlayerPausedEventArgs e) {
 			//throw new NotImplementedException();
 			Console.WriteLine("wow i did");
 		}
 
 		void Window1_Loaded(object sender, RoutedEventArgs e) {
+			listwindow = new Playlist();
+			listwindow.Show();
 			timer = new DispatcherTimer();
 			timer.Interval = TimeSpan.FromSeconds(0.6);
 			timer.Tick += timer1_Tick;
@@ -115,8 +127,7 @@ namespace WpfApp1 {
 			if (this.control == null) {
 				return;
 			}
-
-			this.control.SourceProvider.MediaPlayer.Rate = 2;
+			this.control.SourceProvider.MediaPlayer.Rate=(this.control.SourceProvider.MediaPlayer.Rate == 2?1:2);
 		}
 		private long GetLength() {
 			if (this.control == null) {
@@ -175,8 +186,9 @@ namespace WpfApp1 {
 			}
 		}
 		void tt(){
-			Thread.Sleep(600);
+			Thread.Sleep(500);
 			Console.WriteLine("zzz");
+			if(checkboxlist.IsChecked==true)
 			control.SourceProvider.MediaPlayer.Play(new Uri("C:/Users/duchu/Videos/BBC World News Countdown.flv"));
 		}
 		private void stopped(object sender, VlcMediaPlayerStoppedEventArgs e) {
@@ -238,6 +250,24 @@ namespace WpfApp1 {
 			timer.Start();
 		}
 
-	
+		private void checkboxlist_Checked(object sender, RoutedEventArgs e) {
+			if(listwindow!=null)listwindow.Show();
+		}
+
+		private void checkboxlist_Unchecked(object sender, RoutedEventArgs e) {
+			listwindow.Hide();
+		}
+
+		private void Window_SizeChanged(object sender, SizeChangedEventArgs e) {
+			synclistlayout();
+		}
+
+		private void Window_LocationChanged(object sender, EventArgs e) {
+			synclistlayout();
+		}
+
+		private void Window_Closed(object sender, EventArgs e) {
+			listwindow.Close();
+		}
 	}
 }
