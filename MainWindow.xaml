@@ -9,6 +9,14 @@
 				AllowDrop="True"
         Title="MainWindow" Height="600" Width="724">
 	<Window.Resources>
+		<DataTemplate x:Key="studentItemTemplate">
+			<Grid>
+				<StackPanel Orientation="Horizontal" >
+					<TextBlock Text="{Binding Name}" Margin="10,10,5,10" Width="100"/>
+					<TextBlock Text="{Binding FilePath}" Margin="10,10,5,10" Width="100"/>
+				</StackPanel>
+			</Grid>
+		</DataTemplate>
 		<SolidColorBrush x:Key="SliderThumb.Static.Foreground" Color="#FFE5E5E5"/>
 		<SolidColorBrush x:Key="SliderThumb.MouseOver.Background" Color="#FFDCECFC"/>
 		<SolidColorBrush x:Key="SliderThumb.MouseOver.Border" Color="#FF7Eb4EA"/>
@@ -266,42 +274,50 @@
 			</Style.Triggers>
 		</Style>
 	</Window.Resources>
+
 	<Grid Background="WhiteSmoke">
-		<Grid.RowDefinitions>
-			<RowDefinition Height="*"/>
-			<RowDefinition Height="Auto"/>
-			<RowDefinition Height="Auto"/>
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="3*"/>
+			<ColumnDefinition Width="auto"/>
+		</Grid.ColumnDefinitions>
+		<Grid Grid.Column="0">
+			<Grid.RowDefinitions>
+				<RowDefinition Height="*"/>
+				<RowDefinition Height="Auto"/>
+				<RowDefinition Height="Auto"/>
 
-		</Grid.RowDefinitions>
+			</Grid.RowDefinitions>
+			<ContentControl Grid.Row="0" Name="ControlContainer" AllowDrop="True" Drop="tpath_Drop">
+			</ContentControl>
+			<StackPanel Grid.Row="2" Height="30" DockPanel.Dock="Left" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
+				<Button Click="OnStopButtonClick" Width="50" Margin="10,0" Content="Stop"/>
+				<Button x:Name="btnPause" Content="播放"  Width="50" Margin="10,0" Click="btnPause_Click" Height="30" VerticalAlignment="Top"/>
+				<Button Grid.Row="1" Click="OnForwardButtonClick" x:Name="Forward" Margin="10,0" Width="50">2x</Button>
+				<Button x:Name="buttontest" Content="（不是）" Margin="10,0" Width="70" Click="buttontest_Click" Height="30" VerticalAlignment="Top"/>
 
-		<ContentControl Grid.Row="0" Name="ControlContainer" AllowDrop="True" Drop="tpath_Drop">
-		</ContentControl>
+				<TextBlock x:Name="tb" Text="{Binding time}"/>
+			</StackPanel>
 
-		<!-- <Button Grid.Row="1" Click="OnPlayButtonClick">Play</Button>
-		-->
+			<DockPanel Grid.Row="1">
+				<Slider x:Name="slidervol" MinWidth="100" DockPanel.Dock="Right" Margin="10" Minimum="0" Maximum="100" Value="50"  VerticalAlignment="Center" Style="{DynamicResource SliderStyle1}" LargeChange="5"/>
+				<Slider x:Name="slider1" Margin="10" Minimum="0" Maximum="100" Value="0" VerticalAlignment="Center" Thumb.DragCompleted="slider1_DragCompleted" IsMoveToPointEnabled="True" ValueChanged="slider1_ValueChanged" Thumb.DragStarted="slider1_DragStarted" MouseLeftButtonUp="slider1_MouseLeftButtonUp" Style="{DynamicResource SliderStyle1}" />
+			</DockPanel>
 
+			<DockPanel Grid.Row="2" HorizontalAlignment="Left" Margin="18,0,0,0">
+				<CheckBox Grid.Row="2" x:Name="checkBoxloop" Content="循环" Margin="0,0,10,0" VerticalAlignment="Center" HorizontalAlignment="Right" IsChecked="{Binding isloop}"/>
+				<CheckBox Grid.Row="2" x:Name="checkBoxrand" Content="随机" Margin="0,0,10,0" VerticalAlignment="Center" HorizontalAlignment="Right" IsChecked="{Binding israndom}"/>
 
-
-		<StackPanel Grid.Row="2" Height="30" DockPanel.Dock="Left" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
-			<Button Click="OnStopButtonClick" Width="50" Margin="10,0" Content="Stop"/>
-			<Button x:Name="btnPause" Content="播放"  Width="50" Margin="10,0" Click="btnPause_Click" Height="30" VerticalAlignment="Top"/>
-			<Button Grid.Row="1" Click="OnForwardButtonClick" x:Name="Forward" Margin="10,0" Width="50">2x</Button>
-			<Button x:Name="buttontest" Content="快进" Margin="10,0" Width="50" Click="buttontest_Click"/>
-
-			<TextBlock x:Name="tb" Text="{Binding time}"/>
-		</StackPanel>
-
-		<DockPanel Grid.Row="1">
-			<Slider x:Name="slidervol" MinWidth="100" DockPanel.Dock="Right" Margin="10" Minimum="0" Maximum="200" Value="100"  VerticalAlignment="Center"/>
-			<Slider x:Name="slider1" Margin="10" Minimum="0" Maximum="100" Value="0" VerticalAlignment="Center" Thumb.DragCompleted="slider1_DragCompleted" IsMoveToPointEnabled="True" ValueChanged="slider1_ValueChanged" Thumb.DragStarted="slider1_DragStarted" MouseLeftButtonUp="slider1_MouseLeftButtonUp" Style="{DynamicResource SliderStyle1}"/>
-		</DockPanel>
-
-		<DockPanel Grid.Row="2" HorizontalAlignment="Left" Margin="18,0,0,0">
-			<CheckBox Grid.Row="2" x:Name="checkBox" Content="循环" Margin="0,0,10,0" VerticalAlignment="Center" HorizontalAlignment="Right"/>
-			<CheckBox Grid.Row="2" x:Name="checkBoxrand" Content="随机" Margin="0,0,10,0" VerticalAlignment="Center" HorizontalAlignment="Right"/>
-			
-		</DockPanel>
-		<CheckBox Grid.Row="2" x:Name="checkboxlist" Content="显示列表" HorizontalAlignment="Right" Margin="0,0,18,0" VerticalAlignment="Center" IsChecked="True" Checked="checkboxlist_Checked" Unchecked="checkboxlist_Unchecked"/>
+			</DockPanel>
+			<CheckBox Grid.Row="2" x:Name="checkboxlist" Content="显示列表" HorizontalAlignment="Right" Margin="0,0,18,0" VerticalAlignment="Center" IsChecked="True" Checked="checkboxlist_Checked" Unchecked="checkboxlist_Unchecked"/>
 		</Grid>
+		<Grid Grid.Column="1" Name="gridPlaylist" Background="White" Visibility="Visible" >
+			<Grid.RowDefinitions>
+				<RowDefinition />
+				<RowDefinition Height="20"/>
+			</Grid.RowDefinitions>
+			<ListBox x:Name="listviewplaylist" Grid.Row="0" ItemTemplate="{StaticResource studentItemTemplate}" Drop="ListView_Drop" DragOver="ListView_DragOver"/>
 
+			<Button Grid.Row="1" Width="160" Height="20" Click="Button_Click"/>
+		</Grid>
+	</Grid>
 </Window>
