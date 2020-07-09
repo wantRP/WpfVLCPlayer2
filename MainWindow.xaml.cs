@@ -114,7 +114,7 @@ namespace WpfApp1 {
 				double ct = GetCurrentTime() * 100.0 / GetLength();
 				//vtime.progress =Convert.ToString( ct);
 				slider1.Value = ct;
-				string time = (IntSecondToString((int)GetCurrentTime()/1000) + "/" + IntSecondToString((int)GetLength()/1000));
+				string time = (IntSecondToString((int)GetCurrentTime() / 1000) + "/" + IntSecondToString((int)GetLength() / 1000));
 				tb.Text = time;
 			} catch { }
 		}
@@ -172,10 +172,12 @@ namespace WpfApp1 {
 			string msg = "Drop";
 			if (e.Data.GetDataPresent(DataFormats.FileDrop)) {
 				msg = ((System.Array)e.Data.GetData(DataFormats.FileDrop)).GetValue(0).ToString();
-				if(GetLengthByPath(msg)=="00:00"){
+				if (GetLengthByPath(msg) == "00:00") {
 					MessageBox.Show("Unsupported file format");
 					return;
 				}
+				isplaying = Isplaying.playing;
+				btnPause.Content = "暂停";
 				timer.Start();
 				this.control?.Dispose();
 				this.control = new VlcControl();
@@ -235,7 +237,7 @@ namespace WpfApp1 {
 				return;
 			}
 			if (isplaying == Isplaying.pause) {//into play
-				btnPause.Content = "继续";
+				btnPause.Content = "暂停";
 				isplaying = Isplaying.playing;
 				control.SourceProvider.MediaPlayer.Play();
 				Console.WriteLine("继续");
@@ -297,7 +299,8 @@ namespace WpfApp1 {
 		}
 		private void buttontest_Click(object sender, RoutedEventArgs e) {
 			//playlist.
-			if (isplaying == Isplaying.playing) control.SourceProvider.MediaPlayer.Stop();
+			control.SourceProvider.MediaPlayer.Time = GetLength() - 1000;
+			//if (isplaying == Isplaying.playing) control.SourceProvider.MediaPlayer.Stop();
 		}
 		private void slider1_MouseLeftButtonUp(object sender, MouseButtonEventArgs e) {
 
@@ -329,7 +332,6 @@ namespace WpfApp1 {
 			else hms = string.Format("{0:D2}:{1:D2}", mins, secs);
 			return hms;
 		}
-		
 		string GetLengthByPath(string s) {
 			VlcControl vcontrol = new VlcControl();
 			vcontrol.SourceProvider.CreatePlayer(this.vlcLibDirectory);
@@ -339,11 +341,10 @@ namespace WpfApp1 {
 			media.Parse();
 			return IntSecondToString((int)media.Duration.TotalSeconds);
 		}
-		
 		private void Window_Closed(object sender, EventArgs e) {
 			string jsonString;
-			MessageBox.Show(lastPlay + "\n" + latestPlayingPath);
-			if(latestPlayingPath==""||latestPlayingPath==null){ }else{
+			//MessageBox.Show(lastPlay + "\n" + latestPlayingPath);
+			if (latestPlayingPath == "" || latestPlayingPath == null) { } else {
 				if (playlist.Count == 0) {
 					playlist = new ObservableCollection<Media>();
 					playlist.Add(lastPlay);
@@ -356,7 +357,7 @@ namespace WpfApp1 {
 				jsonString = JsonConvert.SerializeObject(conf, Formatting.Indented);
 				if (jsonString != null) System.IO.File.WriteAllText("config.json", jsonString);
 			}
-			
+
 			this.control?.Dispose();
 		}
 		#region playlist
@@ -414,7 +415,7 @@ namespace WpfApp1 {
 
 		private void buttonMoveUp_Click(object sender, RoutedEventArgs e) {
 			int index = listviewplaylist.SelectedIndex;
-			if (index > 1) playlist.Move(index, index - 1);
+			if (index >= 1) playlist.Move(index, index - 1);
 		}
 		private void buttonMoveDown_Click(object sender, RoutedEventArgs e) {
 			int index = listviewplaylist.SelectedIndex;
@@ -462,20 +463,18 @@ namespace WpfApp1 {
 		}
 		#endregion
 		private void OnBack_click(object sender, RoutedEventArgs e) {
-		if(isplaying==Isplaying.playing)
-			try {
-				if(control.SourceProvider.MediaPlayer.Time<=3000){
+			if (isplaying == Isplaying.playing)
+				try {
+					if (control.SourceProvider.MediaPlayer.Time <= 3000) {
 						if (playlist.Count != 0) {
 							playlistIndex = (playlistIndex - 1) % playlist.Count;
 							latestPlayingPath = playlist[playlistIndex].FilePath;
 							lastPlay = playlist[playlistIndex];
 							control.SourceProvider.MediaPlayer.Play(new Uri(playlist[playlistIndex].FilePath));
 						} else control.SourceProvider.MediaPlayer.Play(new Uri(latestPlayingPath));
-				}
-				else control.SourceProvider.MediaPlayer.Time = 0;
-			} catch { }
+					} else control.SourceProvider.MediaPlayer.Time = 0;
+				} catch { }
 		}
-
 		private void buttonFileMedia_click(object sender, RoutedEventArgs e) {
 			OpenFileDialog dlg = new OpenFileDialog();
 			if (dlg.ShowDialog() == true) {
@@ -484,6 +483,8 @@ namespace WpfApp1 {
 					MessageBox.Show("Unsupported file format");
 					return;
 				}
+				isplaying = Isplaying.playing;
+				btnPause.Content = "暂停";
 				timer.Start();
 				this.control?.Dispose();
 				this.control = new VlcControl();
@@ -501,6 +502,12 @@ namespace WpfApp1 {
 				};
 				playlist.Add(lastPlay);
 			}
+		}
+		private void slidervol_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e) {
+			//Audio.IsMute :静音和非静音
+			//Audio.Volume：音量的百分比，值在0—200之间
+
+			try { control.SourceProvider.MediaPlayer.Audio.Volume = (int)slidervol.Value; } catch { }
 		}
 	}
 }

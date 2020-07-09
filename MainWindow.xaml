@@ -294,18 +294,18 @@
 			</Grid.RowDefinitions>
 			<ContentControl Grid.Row="0" Name="ControlContainer" AllowDrop="True" Drop="tpath_Drop">
 			</ContentControl>
-			<StackPanel Grid.Row="2" Height="30" DockPanel.Dock="Left" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
+			<StackPanel Grid.Row="2" Height="30" DockPanel.Dock="Left" Orientation="Horizontal" HorizontalAlignment="Center" Margin="190,10,100,10">
 				<Button Click="OnBack_click" Width="40" Margin="6,3" Content="返回"/>
 				<Button Click="OnStopButtonClick" Width="40" Margin="6,3" Content="停止"/>
 				<Button x:Name="btnPause" Content="播放"  Width="50" Margin="10,0" Click="btnPlayPause_Click" Height="30" VerticalAlignment="Top"/>
 				<Button  Click="OnForwardButtonClick" x:Name="Forward" Margin="6,3" Width="40">2x</Button>
 				<Button x:Name="buttontest" Content="下一个" Margin="6,3" Width="40" Click="buttontest_Click"  VerticalAlignment="Center"/>
-
+				<TextBlock x:Name="tb" Text="" VerticalAlignment="Center"  Grid.Row="2" Width="90"/>
 				
 			</StackPanel>
-<TextBlock x:Name="tb" Text="" VerticalAlignment="Center" Margin="615,16,-615,18" Grid.Row="2"/>
+
 			<DockPanel Grid.Row="1">
-				<Slider x:Name="slidervol" MinWidth="100" DockPanel.Dock="Right" Margin="10" Minimum="0" Maximum="100" Value="50"  VerticalAlignment="Center" Style="{DynamicResource SliderStyle1}" LargeChange="5"/>
+				<Slider x:Name="slidervol" MinWidth="100" DockPanel.Dock="Right" Margin="10" Minimum="0" Maximum="200" Value="50"  VerticalAlignment="Center" Style="{DynamicResource SliderStyle1}" LargeChange="5" SmallChange="2" Thumb.DragCompleted="slidervol_DragCompleted"/>
 				<Slider x:Name="slider1" Margin="10" Minimum="0" Maximum="100" Value="0" VerticalAlignment="Center" Thumb.DragCompleted="slider1_DragCompleted" IsMoveToPointEnabled="True" ValueChanged="slider1_ValueChanged" Thumb.DragStarted="slider1_DragStarted" MouseLeftButtonUp="slider1_MouseLeftButtonUp" Style="{DynamicResource SliderStyle1}" />
 			</DockPanel>
 
