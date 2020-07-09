@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
@@ -17,8 +19,8 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Threading;
 using Vlc.DotNet.Core;
+using Vlc.DotNet.Core.Interops;
 using Vlc.DotNet.Wpf;
-
 namespace WpfApp1 {
 	/// <summary>
 	/// MainWindow.xaml 的交互逻辑
@@ -37,22 +39,37 @@ namespace WpfApp1 {
 		public bool SliderDirectMoveMask = false;
 		public bool isloop { get; set; }
 		public bool israndom { get; set; }
-		public class Media {
+		public class Media : IEquatable<Media> {
 			public string FilePath { get; set; }
 			public string Name { get; set; }
 			public string Length { get; set; }
+			public bool Equals(Media other) {
+				// Would still want to check for null etc. first.
+				return (this.FilePath == other.FilePath) ;
+
+			}
 		}
-		public List<Media> playlist=new List<Media>();
+		public ObservableCollection<Media> playlist = new ObservableCollection<Media>();
+		public int playlistIndex = 0;
+		public string latestPlayingPath;
+		public Media lastPlay;
+		public class Config {
+			public bool Loop{ get; set; }
+			public bool Random{ get; set; }
+			public bool ShowList{ get; set; }
+			public ObservableCollection<Media>Playlist { get; set; }
+		}
+		public Config conf=new Config();
 		public MainWindow() {
 			InitializeComponent();
-			playlist = new List<Media>();
+			Loaded += new RoutedEventHandler(Window1_Loaded);
+			//playlist = new ObservableCollection<Media>();
 			var currentAssembly = Assembly.GetEntryAssembly();
 			var currentDirectory = new FileInfo(currentAssembly.Location).DirectoryName;
 			// Default installation path of VideoLAN.LibVLC.Windows
 			tb.DataContext = vtime;
 			slider1.DataContext = vtime;
 			vtime.time = "ee";
-
 			vlcLibDirectory = new DirectoryInfo(Path.Combine(currentDirectory, "libvlc", IntPtr.Size == 4 ? "win-x86" : "win-x64"));
 			this.control = new VlcControl();
 			this.ControlContainer.Content = this.control;
@@ -62,17 +79,33 @@ namespace WpfApp1 {
 			checkBoxloop.DataContext = this;
 			checkBoxrand.DataContext = this;
 			this.listviewplaylist.ItemsSource = playlist;
-			Loaded += new RoutedEventHandler(Window1_Loaded);
+			
+			
+		}
+		void Window1_Loaded(object sender, RoutedEventArgs e) {
+			LoadConfig();
+			timer = new DispatcherTimer();
+			timer.Interval = TimeSpan.FromSeconds(0.6);
+			timer.Tick += timer1_Tick;
+		}
+		public void LoadConfig() {
+			FileStream fileStream = new FileStream("config.json", FileMode.OpenOrCreate);
+			fileStream.Close();// prevent expection
+			using (StreamReader r = new StreamReader("config.json")) {
+				string json = r.ReadToEnd();
+				conf = JsonConvert.DeserializeObject<Config>(json);
+				if(conf!=null){ 
+				checkboxlist.IsChecked = conf.ShowList;
+				checkBoxloop.IsChecked = conf.Loop;
+				checkBoxrand.IsChecked = conf.Random;
+					foreach (Media m in conf.Playlist) playlist.Add(m);
+				}
+				//List<Item> items = JsonConvert.DeserializeObject<List<Item>>(json);
+			}
 		}
 		private void pauevent(object sender, VlcMediaPlayerPausedEventArgs e) {
 			//throw new NotImplementedException();
 			Console.WriteLine("wow i did");
-		}
-
-		void Window1_Loaded(object sender, RoutedEventArgs e) {
-			timer = new DispatcherTimer();
-			timer.Interval = TimeSpan.FromSeconds(0.6);
-			timer.Tick += timer1_Tick;
 		}
 		private void timer1_Tick(object sender, EventArgs e) {
 			try {
@@ -143,26 +176,45 @@ namespace WpfApp1 {
 				control.SourceProvider.MediaPlayer.Stopped += new EventHandler<VlcMediaPlayerStoppedEventArgs>(stopped);
 
 				control.SourceProvider.MediaPlayer.Play(new Uri(msg));
-
+				latestPlayingPath = msg;
+				playlist.Clear();
+				lastPlay = new Media() {
+					Name = Path.GetFileName(msg),
+					Length = GetLengthByPath(msg),
+					FilePath = msg
+				};
+				playlist.Add(lastPlay);
 			}
 
 		}
 		private void tpath_DragOver(object sender, DragEventArgs e) {
 			e.Effects = DragDropEffects.All;
 		}
-		private void btnPause_Click(object sender, RoutedEventArgs e) {
-			if (isplaying == Isplaying.stop) {//into pause
-				isplaying = Isplaying.playing;
-				btnPause.Content = "暂停";
+		private void btnPlayPause_Click(object sender, RoutedEventArgs e) {
+			if (isplaying == Isplaying.stop) {//now stopped,begin playing, into pause
+				
 				this.control?.Dispose();
 				this.control = new VlcControl();
 				this.ControlContainer.Content = this.control;
-				//control.SourceProvider.MediaPlayer.EndReached += MediaPlayer_EndReached;
 				this.control.SourceProvider.CreatePlayer(this.vlcLibDirectory);
 				control.SourceProvider.MediaPlayer.Paused += new EventHandler<Vlc.DotNet.Core.VlcMediaPlayerPausedEventArgs>(pauevent);
 				control.SourceProvider.MediaPlayer.EndReached += new EventHandler<VlcMediaPlayerEndReachedEventArgs>(currentover);
 				control.SourceProvider.MediaPlayer.Stopped += new EventHandler<VlcMediaPlayerStoppedEventArgs>(stopped);
-				control.SourceProvider.MediaPlayer.Play(new Uri("C:/Users/duchu/Videos/BBC World News Countdown.flv"));
+				if (playlist.Count != 0) {
+					//int index;
+					if (listviewplaylist.SelectedIndex != -1) playlistIndex = listviewplaylist.SelectedIndex;
+					else playlistIndex = 0;
+					control.SourceProvider.MediaPlayer.Play(new Uri(playlist[playlistIndex].FilePath));
+					lastPlay = playlist[playlistIndex];
+					latestPlayingPath = lastPlay.FilePath;
+				} else if (lastPlay != null) {
+					control.SourceProvider.MediaPlayer.Play(new Uri(lastPlay.FilePath));
+					latestPlayingPath = lastPlay.FilePath;
+				} else return;
+				isplaying = Isplaying.playing;
+				btnPause.Content = "暂停";
+				//control.SourceProvider.MediaPlayer.Play(new Uri("C:/Users/duchu/Videos/BBC World News Countdown.flv"));
+
 				timer.Start();
 				return;
 			}
@@ -181,7 +233,7 @@ namespace WpfApp1 {
 				return;
 			}
 		}
-		void tt() {
+		void PlayNext() {
 			Thread.Sleep(800);
 			Console.WriteLine("next");
 
@@ -190,30 +242,33 @@ namespace WpfApp1 {
 			}));
 			isplaying = Isplaying.stop;
 			//this.checkboxlist.Dispatcher.Invoke(new Action(delegate {
-			if (isloop == true)
+			if (isloop == true) {
 				isplaying = Isplaying.playing;
-			this.btnPause.Dispatcher.Invoke(new Action(delegate {
-				btnPause.Content = "暂停";
-			}));
-			control.SourceProvider.MediaPlayer.Play(new Uri("C:/Users/duchu/Videos/BBC World News Countdown.flv"));
-			//}));
-
+				this.btnPause.Dispatcher.Invoke(new Action(delegate {
+					btnPause.Content = "暂停";
+				}));
+				if(playlist.Count==0) {
+					control.SourceProvider.MediaPlayer.Play(new Uri(latestPlayingPath));
+				}else{
+					if (israndom == true) {
+						Random rand = new Random();
+						playlistIndex = rand.Next(playlist.Count);
+					} else
+						playlistIndex = (playlistIndex + 1) % playlist.Count;
+					
+					control.SourceProvider.MediaPlayer.Play(new Uri(playlist[playlistIndex].FilePath));
+				}
+				
+			}
 		}
 		private void stopped(object sender, VlcMediaPlayerStoppedEventArgs e) {
 			Console.WriteLine("stopped");
-			Thread thread = new Thread(tt);
+			Thread thread = new Thread(PlayNext);
 			thread.Start();
 		}
-
 		private void currentover(object sender, VlcMediaPlayerEndReachedEventArgs e) {
-			//btnPause.Content = "播放";
-			//isplaying = Isplaying.stop;
-			//throw new NotImplementedException();
-
 			Console.WriteLine("video is over");
-			//control.SourceProvider.MediaPlayer.Play(new Uri("C:/Users/duchu/Videos/BBC World News Countdown.flv"));
-			//this.control.SourceProvider.CreatePlayer(this.vlcLibDirectory);
-			//control.SourceProvider.MediaPlayer.Play("C:/Users/duchu/Videos/1.mkv");
+
 		}
 
 		private void slider1_DragStarted(object sender, System.Windows.Controls.Primitives.DragStartedEventArgs e) {
@@ -235,17 +290,9 @@ namespace WpfApp1 {
 
 		}
 		private void buttontest_Click(object sender, RoutedEventArgs e) {
-			Console.WriteLine(string.Format("loop: {0}, rand: {1}", isloop, israndom));
-			Console.WriteLine("---playlist---");
-			foreach (Media m in playlist) {
-				Console.WriteLine(m.FilePath);
+			Console.WriteLine(listviewplaylist.SelectedIndex);
 
-			}
-			Console.WriteLine("---that\'s all---");
-			Console.WriteLine(listviewplaylist.Items.Count+" files");
-			//control.SourceProvider.MediaPlayer.Play(new Uri("C:/Users/duchu/Videos/BBC World News Countdown.flv"));
 		}
-
 		private void slider1_MouseLeftButtonUp(object sender, MouseButtonEventArgs e) {
 
 			//Console.WriteLine("up");
@@ -259,28 +306,44 @@ namespace WpfApp1 {
 			this.control.SourceProvider.MediaPlayer.Time = toskiptotime;
 			timer.Start();
 		}
-
 		private void checkboxlist_Checked(object sender, RoutedEventArgs e) {
 			try { gridPlaylist.Visibility = Visibility.Visible; } catch { }
 		}
-
 		private void checkboxlist_Unchecked(object sender, RoutedEventArgs e) {
 			try { gridPlaylist.Visibility = Visibility.Collapsed; } catch { }
 		}
-
+		string IntSecondToString(int a){
+			string hms = "";
+			int secs = a;
+			int hours = secs / 3600;
+			int mins = (secs % 3600) / 60;
+			secs = secs % 60;
+			if (hours != 0) hms = string.Format("{0:D2}:{1:D2}:{2:D2}", hours, mins, secs);
+			else hms = string.Format("{0:D2}:{1:D2}", mins, secs);
+			return hms;
+		}
+		string GetLengthByPath(string s){
+			VlcControl vcontrol = new VlcControl();
+			vcontrol.SourceProvider.CreatePlayer(this.vlcLibDirectory);
+			vcontrol.SourceProvider.MediaPlayer.SetMedia(new Uri(s));
+			VlcMediaPlayer vlcMediaPlayer = vcontrol.SourceProvider.MediaPlayer;
+			VlcMedia media = vlcMediaPlayer.GetMedia();
+			media.Parse();
+			return IntSecondToString((int)media.Duration.TotalSeconds);
+		}
 		private void ListView_Drop(object sender, DragEventArgs e) {
 
 			if (e.Data.GetDataPresent(DataFormats.FileDrop)) {
 				// Note that you can have more than one file.
 				string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
 				foreach (string str in files) {
-					Console.WriteLine(str);
-					string name = str;
-					playlist.Add(new Media() {
+					string hms = GetLengthByPath(str);
+					Media m = new Media() {
 						Name = Path.GetFileName(str),
 						FilePath = str,
-						Length = "1"
-					}) ;
+						Length = hms
+					};
+					if(playlist.Contains(m)==false) playlist.Add(m);
 				}
 			}
 		}
@@ -291,6 +354,51 @@ namespace WpfApp1 {
 
 		private void Button_Click(object sender, RoutedEventArgs e) {
 
+		}
+
+		private void Window_Closed(object sender, EventArgs e) {
+			string jsonString;
+			if(playlist.Count==0){
+				playlist = new ObservableCollection<Media>();
+				playlist.Add(lastPlay);
+			}
+			
+			conf = new Config();
+			conf.Loop = isloop;
+			conf.Playlist = playlist;
+			conf.Random = israndom;
+			conf.ShowList = true;
+			jsonString = JsonConvert.SerializeObject(conf,Formatting.Indented);
+
+			//var options = new JsonSerializerOptions {
+			//	WriteIndented = true
+			//};
+			if(jsonString!=null) System.IO.File.WriteAllText("config.json", jsonString);
+			//	MessageBox.Show(jsonString);
+		}
+
+		private void listviewplaylist_MouseDoubleClick(object sender, MouseButtonEventArgs e) {
+			if(listviewplaylist.SelectedIndex!=-1){
+				int id = listviewplaylist.SelectedIndex;
+				isplaying = Isplaying.playing;
+				btnPause.Content = "暂停";
+				control.SourceProvider.MediaPlayer.Play(new Uri(playlist[id].FilePath));
+				playlistIndex = id;
+				timer.Start();
+			}
+		}
+
+		private void listviewplaylist_KeyDown(object sender, KeyEventArgs e) {
+			if (e.Key == Key.Delete) {
+				Console.WriteLine("to dele");
+				Console.WriteLine(listviewplaylist.SelectedItems.Count);
+				List<Media> toremove = (List<Media>)listviewplaylist.SelectedItems.OfType<Media>().ToList();
+				foreach (Media m in toremove){
+					playlist.Remove(m);
+				}
+				//Media m = (Media)listviewplaylist.SelectedItems[0];
+				//Console.WriteLine(m.Name);
+			}
 		}
 	}
 }

@@ -7,14 +7,19 @@
         xmlns:local="clr-namespace:WpfApp1"
         mc:Ignorable="d"
 				AllowDrop="True"
-        Title="MainWindow" Height="600" Width="724">
+        Title="MainWindow" Height="675" Width="1200" Closed="Window_Closed">
 	<Window.Resources>
-		<DataTemplate x:Key="studentItemTemplate">
+		<DataTemplate  x:Key="playlistTemplate" >
 			<Grid>
-				<StackPanel Orientation="Horizontal" >
-					<TextBlock Text="{Binding Name}" Margin="10,10,5,10" Width="100"/>
-					<TextBlock Text="{Binding FilePath}" Margin="10,10,5,10" Width="100"/>
-				</StackPanel>
+
+				<!--<StackPanel Orientation="Horizontal" >-->
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="200" />
+					<ColumnDefinition Width="50"/>
+				</Grid.ColumnDefinitions>
+				<TextBlock Grid.Column="0"  TextTrimming="CharacterEllipsis"  Text="{Binding Name}"  HorizontalAlignment="Left" VerticalAlignment="Center"/>
+				<TextBlock Grid.Column="1" Foreground="Gray" Text="{Binding Length}"  HorizontalAlignment="Right" VerticalAlignment="Center"/>
+				<!--</StackPanel>-->
 			</Grid>
 		</DataTemplate>
 		<SolidColorBrush x:Key="SliderThumb.Static.Foreground" Color="#FFE5E5E5"/>
@@ -291,7 +296,7 @@
 			</ContentControl>
 			<StackPanel Grid.Row="2" Height="30" DockPanel.Dock="Left" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
 				<Button Click="OnStopButtonClick" Width="50" Margin="10,0" Content="Stop"/>
-				<Button x:Name="btnPause" Content="播放"  Width="50" Margin="10,0" Click="btnPause_Click" Height="30" VerticalAlignment="Top"/>
+				<Button x:Name="btnPause" Content="播放"  Width="50" Margin="10,0" Click="btnPlayPause_Click" Height="30" VerticalAlignment="Top"/>
 				<Button Grid.Row="1" Click="OnForwardButtonClick" x:Name="Forward" Margin="10,0" Width="50">2x</Button>
 				<Button x:Name="buttontest" Content="（不是）" Margin="10,0" Width="70" Click="buttontest_Click" Height="30" VerticalAlignment="Top"/>
 
@@ -310,12 +315,12 @@
 			</DockPanel>
 			<CheckBox Grid.Row="2" x:Name="checkboxlist" Content="显示列表" HorizontalAlignment="Right" Margin="0,0,18,0" VerticalAlignment="Center" IsChecked="True" Checked="checkboxlist_Checked" Unchecked="checkboxlist_Unchecked"/>
 		</Grid>
-		<Grid Grid.Column="1" Name="gridPlaylist" Background="White" Visibility="Visible" >
+		<Grid Grid.Column="1" Name="gridPlaylist" Background="White" Visibility="Visible" Width="266" >
 			<Grid.RowDefinitions>
 				<RowDefinition />
 				<RowDefinition Height="20"/>
 			</Grid.RowDefinitions>
-			<ListBox x:Name="listviewplaylist" Grid.Row="0" ItemTemplate="{StaticResource studentItemTemplate}" Drop="ListView_Drop" DragOver="ListView_DragOver"/>
+			<ListBox x:Name="listviewplaylist" Grid.Row="0" ItemTemplate="{StaticResource playlistTemplate}" HorizontalContentAlignment="Stretch" Drop="ListView_Drop" DragOver="ListView_DragOver" SelectionMode="Extended" MouseDoubleClick="listviewplaylist_MouseDoubleClick" KeyDown="listviewplaylist_KeyDown"/>
 
 			<Button Grid.Row="1" Width="160" Height="20" Click="Button_Click"/>
 		</Grid>
