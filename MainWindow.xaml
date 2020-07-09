@@ -295,14 +295,15 @@
 			<ContentControl Grid.Row="0" Name="ControlContainer" AllowDrop="True" Drop="tpath_Drop">
 			</ContentControl>
 			<StackPanel Grid.Row="2" Height="30" DockPanel.Dock="Left" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
-				<Button Click="OnStopButtonClick" Width="50" Margin="10,0" Content="Stop"/>
+				<Button Click="OnBack_click" Width="40" Margin="6,3" Content="返回"/>
+				<Button Click="OnStopButtonClick" Width="40" Margin="6,3" Content="停止"/>
 				<Button x:Name="btnPause" Content="播放"  Width="50" Margin="10,0" Click="btnPlayPause_Click" Height="30" VerticalAlignment="Top"/>
-				<Button Grid.Row="1" Click="OnForwardButtonClick" x:Name="Forward" Margin="10,0" Width="50">2x</Button>
-				<Button x:Name="buttontest" Content="（不是）" Margin="10,0" Width="70" Click="buttontest_Click" Height="30" VerticalAlignment="Top"/>
+				<Button  Click="OnForwardButtonClick" x:Name="Forward" Margin="6,3" Width="40">2x</Button>
+				<Button x:Name="buttontest" Content="下一个" Margin="6,3" Width="40" Click="buttontest_Click"  VerticalAlignment="Center"/>
 
-				<TextBlock x:Name="tb" Text="{Binding time}"/>
+				
 			</StackPanel>
-
+<TextBlock x:Name="tb" Text="" VerticalAlignment="Center" Margin="615,16,-615,18" Grid.Row="2"/>
 			<DockPanel Grid.Row="1">
 				<Slider x:Name="slidervol" MinWidth="100" DockPanel.Dock="Right" Margin="10" Minimum="0" Maximum="100" Value="50"  VerticalAlignment="Center" Style="{DynamicResource SliderStyle1}" LargeChange="5"/>
 				<Slider x:Name="slider1" Margin="10" Minimum="0" Maximum="100" Value="0" VerticalAlignment="Center" Thumb.DragCompleted="slider1_DragCompleted" IsMoveToPointEnabled="True" ValueChanged="slider1_ValueChanged" Thumb.DragStarted="slider1_DragStarted" MouseLeftButtonUp="slider1_MouseLeftButtonUp" Style="{DynamicResource SliderStyle1}" />
@@ -311,18 +312,24 @@
 			<DockPanel Grid.Row="2" HorizontalAlignment="Left" Margin="18,0,0,0">
 				<CheckBox Grid.Row="2" x:Name="checkBoxloop" Content="循环" Margin="0,0,10,0" VerticalAlignment="Center" HorizontalAlignment="Right" IsChecked="{Binding isloop}"/>
 				<CheckBox Grid.Row="2" x:Name="checkBoxrand" Content="随机" Margin="0,0,10,0" VerticalAlignment="Center" HorizontalAlignment="Right" IsChecked="{Binding israndom}"/>
-
+				<Button Content="打开" Height="24" Width="40" Click="buttonFileMedia_click" />
 			</DockPanel>
 			<CheckBox Grid.Row="2" x:Name="checkboxlist" Content="显示列表" HorizontalAlignment="Right" Margin="0,0,18,0" VerticalAlignment="Center" IsChecked="True" Checked="checkboxlist_Checked" Unchecked="checkboxlist_Unchecked"/>
 		</Grid>
 		<Grid Grid.Column="1" Name="gridPlaylist" Background="White" Visibility="Visible" Width="266" >
 			<Grid.RowDefinitions>
 				<RowDefinition />
-				<RowDefinition Height="20"/>
+				<RowDefinition Height="30"/>
 			</Grid.RowDefinitions>
 			<ListBox x:Name="listviewplaylist" Grid.Row="0" ItemTemplate="{StaticResource playlistTemplate}" HorizontalContentAlignment="Stretch" Drop="ListView_Drop" DragOver="ListView_DragOver" SelectionMode="Extended" MouseDoubleClick="listviewplaylist_MouseDoubleClick" KeyDown="listviewplaylist_KeyDown"/>
 
-			<Button Grid.Row="1" Width="160" Height="20" Click="Button_Click"/>
+			<StackPanel Grid.Row="1" Orientation="Horizontal" >
+				<Button Content="▲" Name="buttonMoveUp" Width="22" FontSize="12" Margin="16,4,0,4"  FontFamily="Segoe UI Emoji" Click="buttonMoveUp_Click"/>
+				<Button Content="▼" Name="buttonMoveDown" Width="22" FontSize="12" Margin="10,4,0,4" FontFamily="Segoe UI Emoji" Click="buttonMoveDown_Click"/>
+				<Button Content="清空" Name="buttonClearList" Margin="10,4,0,4" Click="buttonClearList_Click" />
+				<Button Content="导入" Name="buttonImportList" Margin="10,4,0,4" Click="buttonImportList_Click" />
+				<Button Content="导出" Name="buttonExportList" Margin="10,4,0,4" Click="buttonExportList_Click" />
+			</StackPanel>
 		</Grid>
 	</Grid>
 </Window>
